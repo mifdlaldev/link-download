@@ -32,6 +32,7 @@ extractRouter.post("/", async (req: Request, res: Response): Promise<void> => {
     // Attempt Extraction via Playwright
     let extractedUrl: string | null = null;
     let extractedHeaders: Record<string, string> = {};
+    const debugUrls: string[] = [];
 
     console.log(`Starting extraction for: ${targetUrl}`);
 
@@ -50,6 +51,12 @@ extractRouter.post("/", async (req: Request, res: Response): Promise<void> => {
       const respUrl = response.url();
       try {
         const urlObj = new URL(respUrl);
+        
+        // Track unique domains for debug
+        if (response.request().resourceType() === "document" || response.request().resourceType() === "iframe" || response.request().resourceType() === "media" || response.request().resourceType() === "xhr" || response.request().resourceType() === "fetch") {
+           if (debugUrls.length < 25 && !debugUrls.includes(respUrl)) debugUrls.push(respUrl);
+        }
+
         if (
           urlObj.pathname.endsWith(".m3u8") ||
           urlObj.pathname.endsWith(".mp4")
@@ -79,6 +86,7 @@ extractRouter.post("/", async (req: Request, res: Response): Promise<void> => {
         meta: { status: 404, message: "Not Found" },
         data: null,
         error: "Failed to extract video stream from the provided URL.",
+        debug: debugUrls
       });
       return;
     }
