@@ -32,7 +32,10 @@ extractRouter.post('/', async (req: Request, res: Response): Promise<void> => {
 
     console.log(`Starting extraction for: ${targetUrl}`);
 
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({ 
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     });
@@ -81,7 +84,7 @@ extractRouter.post('/', async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       meta: { status: 500, message: 'Internal Server Error' },
       data: null,
-      error: 'An unexpected error occurred during extraction.'
+      error: error.message || 'An unexpected error occurred during extraction.'
     });
   }
 });
