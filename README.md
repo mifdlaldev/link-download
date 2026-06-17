@@ -13,32 +13,59 @@
   <p>
     <img src="https://img.shields.io/badge/status-production--ready-22c55e" alt="Status" />
     <img src="https://img.shields.io/badge/tests-99_ passing-22c55e?logo=vitest" alt="Tests" />
-    <img src="https://img.shields.io/badge/coverage-90%25_ lines-22c55e" alt="Coverage" />
+    <img src="https://img.shields.io/badge/coverage-90%25_lines-22c55e" alt="Coverage" />
     <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
-    <a href="https://render.com"><img src="https://img.shields.io/badge/deploy-Ready_for_Render-46e3b7?logo=render" alt="Deploy" /></a>
+    <a href="https://github.com/codespaces/new?repo=mifdlaldev/link-download"><img src="https://img.shields.io/badge/Open_in-Codespaces-5B8EF0?logo=githubcodespaces" alt="Codespaces" /></a>
+    <a href="https://vercel.com/new/clone?repository-url=https://github.com/mifdlaldev/link-download"><img src="https://img.shields.io/badge/deploy_on-Vercel-000000?logo=vercel" alt="Vercel" /></a>
   </p>
 </div>
 
 ---
 
-## Demo
+## Live Demo
+
+**[Try the live demo!](https://link-download.vercel.app)** — Free, no credit card, always online.
+
+| Provider | Live Demo | Full Backend |
+|---|---|---|
+| **Videy.co** | ✅ Works directly | ✅ |
+| **Videqs.download** | ❌ Needs local backend | ✅ |
+| **Playvvip.top** | ❌ Needs local backend | ✅ |
+| **Fwh.is** | ❌ Needs local backend | ✅ |
+
+> **Why can't all providers work on the live demo?**
+> Providers like `videqs.download`, `playvvip.top`, and `fwh.is` require a headless Chromium browser (Playwright) to render JavaScript and intercept video streams. Playwright needs ~300MB of browser binary + 1-2GB of RAM — this cannot run on serverless platforms like Vercel (max 10s timeout, no persistent processes).
+>
+> Platforms that do support Docker + Playwright (Render, Fly.io, Railway) either require a credit card or have usage limits that eventually cost money — typically $5-7/month.
+>
+> This is a deliberate **engineering trade-off**: the live demo showcases the UI and `videy.co` flow. Full extraction is available via free alternatives below.
+
+### Free Ways to Run the Full Backend
+
+| Method | Cost | Credit Card | Setup Time |
+|---|---|---|---|
+| **[GitHub Codespaces](https://github.com/codespaces/new?repo=mifdlaldev/link-download)** | Free (60h/month) | ❌ Not needed | 1 click |
+| **[Local / Docker](https://github.com/mifdlaldev/link-download#quick-start)** | Free (forever) | ❌ Not needed | ~2 minutes |
+
+---
+
+## Screenshot
 
 ![Universal Downloader UI](frontend/public/screenshot.png)
-
-*A minimalist dark-themed interface. Paste a video URL → get a direct download link.*
 
 ---
 
 ## Features
 
-- **🎯 Multi-provider extraction** — Supports `videqs.download`, `playvvip.top`, `fwh.is`, and `videy.co`
-- **⚡ Direct resolution** — Videy.co URLs resolved instantly without launching a browser
-- **🕵️ Smart media detection** — Playwright headless Chrome intercepts network traffic and scans DOM for media sources
-- **📊 Heuristic scoring** — 15+ scoring rules to pick the best media candidate while filtering ads and trackers
-- **🔒 Production-grade security** — Helmet, CORS, rate limiting, Zod input validation, structured error handling
-- **📦 Proxy download** — Streams media through the backend with proper headers, supporting range requests
-- **🧪 Comprehensive testing** — 99 tests (unit + integration), 90%+ coverage
-- **🐳 Docker ready** — One-command setup with Docker Compose
+- **Multi-provider extraction** — Supports `videqs.download`, `playvvip.top`, `fwh.is`, and `videy.co`
+- **Direct resolution** — Videy.co URLs resolved instantly without launching a browser
+- **Smart media detection** — Playwright headless Chrome intercepts network traffic and scans DOM for media sources
+- **Heuristic scoring** — 15+ scoring rules to pick the best media candidate while filtering ads and trackers
+- **Production-grade security** — Helmet, CORS, rate limiting, Zod input validation, structured error handling
+- **Proxy download** — Streams media through the backend with proper headers, supporting range requests
+- **Comprehensive testing** — 99 tests (unit + integration), 90%+ coverage
+- **Docker ready** — One-command setup with Docker Compose
+- **CI/CD** — GitHub Actions auto-test every push; Husky pre-commit hooks
 
 ---
 
@@ -49,40 +76,47 @@
 | **Backend** | Express 5, TypeScript (strict), Playwright 1.42, Zod 4, Pino |
 | **Frontend** | React 19, Vite 8, Tailwind CSS 3, shadcn/ui, Lucide icons |
 | **Testing** | Vitest, Supertest, V8 coverage |
-| **DevOps** | Docker Compose, Husky, lint-staged |
+| **DevOps** | Docker Compose, Husky, lint-staged, GitHub Actions |
 
 ---
 
 ## Architecture
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Frontend as React SPA
-    participant Backend as Express API
-    participant Browser as Playwright Chromium
-    participant Upstream as Video Host
+```
+┌──────────────────────────────────────┐
+│         Vercel (Free, No CC)         │
+│                                      │
+│  ┌──────────────────────────────┐    │
+│  │  Frontend (React SPA)        │    │  Always UP
+│  └──────────────────────────────┘    │
+│  ┌──────────────────────────────┐    │
+│  │  Serverless API              │    │  videy.co direct resolve
+│  │  /api/v1/extract             │    │  (no Playwright needed)
+│  └──────────────────────────────┘    │
+└──────────┬───────────────────────────┘
+           │ (other providers)
+           ▼
+┌──────────────────────────────────────┐
+│  GitHub Codespaces / Local (Free)    │
+│                                      │
+│  ┌──────────────────────────────┐    │
+│  │  Full Backend + Playwright   │    │  All providers
+│  └──────────────────────────────┘    │
+└──────────────────────────────────────┘
+```
 
-    User->>Frontend: Paste URL
-    Frontend->>Backend: POST /api/v1/extract { url }
-    
-    alt videy.co URL
-        Backend->>Backend: Resolve directly (no browser)
-        Backend-->>Frontend: { deliveryMethod: "direct", downloadUrl }
-    else Other providers
-        Backend->>Browser: Launch headless Chromium
-        Browser->>Upstream: Navigate to URL
-        Upstream-->>Browser: Page + media streams
-        Browser->>Browser: Intercept responses, scan DOM
-        Browser-->>Backend: Best media candidate
-        Backend-->>Frontend: { deliveryMethod: "proxy", proxyDownloadUrl }
-    end
-    
-    User->>Frontend: Click download
-    Frontend->>Backend: GET /api/v1/extract/download
-    Backend->>Upstream: Fetch with captured headers
-    Upstream-->>Backend: Media stream
-    Backend-->>User: Stream with range support
+### Extraction Flow
+
+```
+User paste URL → POST /api/v1/extract
+
+  ├─ videy.co → resolve to cdn.videy.co/{id}.mp4 (no browser)
+
+  └─ other providers → Playwright headless Chromium
+       ├─ Intercept network responses → filter for media
+       ├─ Scan DOM for <video>/<audio>/<source> tags
+       ├─ Score candidates (15+ heuristics)
+       └─ Return best match + required headers
 ```
 
 ### Module Structure
@@ -90,18 +124,18 @@ sequenceDiagram
 ```
 backend/
 ├── src/
-│   ├── index.ts                      # Express app entry
-│   ├── config.ts                     # Zod-validated environment
-│   ├── logger.ts                     # Pino structured logger
+│   ├── index.ts              Express app entry
+│   ├── config.ts             Zod-validated environment
+│   ├── logger.ts             Pino structured logger
 │   └── extractor/
-│       ├── errors.ts                 # Custom error classes
-│       ├── helpers.ts                # 17 pure utility functions
-│       ├── schemas.ts                # Input validation schemas
-│       ├── browser.ts                # Playwright lifecycle
-│       ├── routes.ts                 # Route handlers
+│       ├── errors.ts         Custom error classes (400/404/502/503/500)
+│       ├── helpers.ts        17 pure utility functions
+│       ├── schemas.ts        Input validation schemas
+│       ├── browser.ts        Playwright lifecycle
+│       ├── routes.ts         Route handlers
 │       └── providers/
-│           └── videy.ts              # Videy direct resolver
-└── src/__tests__/                    # 99 tests (Vitest)
+│           └── videy.ts      Videy direct resolver
+└── src/__tests__/            99 tests (Vitest)
     ├── helpers.test.ts
     ├── schemas.test.ts
     └── routes.test.ts
@@ -111,38 +145,29 @@ backend/
 
 ## Quick Start
 
-### Prerequisites
+### GitHub Codespaces (1 Click, Free)
 
-- **Node.js** >= 22
-- **npm** >= 10
-- **Playwright Chromium** (for browser-based extraction)
-- **Docker** (optional, for containerized setup)
+[![Open in Codespaces](https://img.shields.io/badge/Open_in-Codespaces-5B8EF0?logo=githubcodespaces)](https://github.com/codespaces/new?repo=mifdlaldev/link-download)
+
+Click the badge above. Codespaces automatically installs dependencies and Playwright. No credit card needed. 60 hours/month free.
 
 ### Local Development
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/link-download.git
+git clone https://github.com/mifdlaldev/link-download.git
 cd link-download
 
-# 2. Install & build backend
+# Backend
 cd backend
 npm install
-npm run build
+npm run playwright:install  # Installs Chromium for Playwright
+npm run dev                  # Starts on localhost:3001
 
-# 3. Install Playwright browser
-npm run playwright:install
-
-# 4. Start backend
-npm run dev
-
-# 5. In another terminal — install & start frontend
+# Frontend (new terminal)
 cd frontend
 npm install
-npm run dev
+npm run dev                  # Starts on localhost:5173
 ```
-
-Frontend runs on `http://localhost:5173`, backend on `http://localhost:3001`.
 
 ### Docker (One Command)
 
@@ -150,38 +175,32 @@ Frontend runs on `http://localhost:5173`, backend on `http://localhost:3001`.
 docker compose up
 ```
 
-Both services start with hot-reload enabled.
-
 ---
 
 ## API Reference
 
-### `POST /api/v1/extract`
+### POST /api/v1/extract
 
 Extract a downloadable video URL from a supported provider.
 
 **Request:**
 ```json
-{
-  "url": "https://videqs.download/abc123"
-}
+{ "url": "https://videqs.download/abc123" }
 ```
 
-**Success Response (200):**
+**Success (200):**
 ```json
 {
   "meta": { "status": 200, "message": "Success" },
   "data": {
-    "title": "Extracted Video Title",
+    "title": "Video Title",
     "downloadUrl": "https://cdn.provider.com/video.mp4",
-    "headersRequired": { "referer": "https://source.com/", "user-agent": "..." },
+    "headersRequired": { "referer": "https://source.com/" },
     "expiresIn": 3600,
     "provider": "videqs",
     "deliveryMethod": "proxy",
-    "directDownloadUrl": null,
     "proxyDownloadUrl": "/api/v1/extract/download?source=..."
-  },
-  "error": null
+  }
 }
 ```
 
@@ -189,23 +208,61 @@ Extract a downloadable video URL from a supported provider.
 |---|---|
 | `200` | Video extracted successfully |
 | `400` | Invalid URL or unsupported domain |
-| `404` | No media stream found on the page |
-| `429` | Rate limited (5 requests/minute/IP) |
+| `404` | No media stream found |
+| `429` | Rate limited (5 req/min) |
+| `501` | Provider needs full backend (Playwright) |
 | `503` | Playwright browser not installed |
 
-### `GET /api/v1/extract/download`
+### GET /api/v1/extract/download
 
-Proxy download a media stream. Used internally by the `proxyDownloadUrl` field.
-
-**Query Parameters:**
+Proxy download a media stream. Used internally by `proxyDownloadUrl`.
 
 | Param | Required | Description |
 |---|---|---|
 | `source` | ✅ | Direct media URL from extraction |
-| `headers` | ✅ | Base64url-encoded JSON of required request headers |
-| `filename` | ❌ | Custom filename for the downloaded file |
+| `headers` | ✅ | Base64url-encoded JSON of request headers |
+| `filename` | ❌ | Custom filename |
 
-**Response:** Streams the media file with proper `Content-Disposition`, `Content-Type`, `Accept-Ranges`, and `Content-Length` headers. Supports partial content (range requests).
+Supports partial content (range requests) for resumable downloads.
+
+---
+
+## Why This Architecture?
+
+### The Core Problem
+
+This project uses **Playwright** (headless Chromium) to extract video streams. Chromium is a ~300MB binary needing 1-2GB of RAM. Most free hosting platforms cannot run it:
+
+| Platform | Free Tier | Playwright-Compatible | Hidden Cost |
+|---|---|---|---|
+| Vercel (serverless) | ✅ Free, no CC | ❌ 10s timeout, no persistent processes | — |
+| Netlify (serverless) | ✅ Free, no CC | ❌ No headless browser support | — |
+| Render (Docker) | ✅ 750h/month | ✅ Runs Docker | ❌ 512MB RAM limit, $5/month if exceeded |
+| Fly.io | ✅ 3 shared VMs | ✅ Runs Docker | ❌ Requires credit card |
+| Railway | ❌ $5 credit then pay | ✅ Runs Docker | ❌ Requires credit card |
+
+### The Solution: Hybrid 3-Layer Deployment
+
+```
+Layer 1 — Vercel (100% free, no CC, always online)
+  Frontend + serverless API for videy.co direct resolve
+  Non-videy providers → show instructions to use full backend
+
+Layer 2 — GitHub Codespaces (60 hours/month free, no CC)
+  One click → full backend + Playwright → all providers
+  Enough for demo, testing, or light development use
+
+Layer 3 — Local / Docker (100% free, forever)
+  git clone && docker compose up → full functionality
+  No platform limits, no time limits, no costs
+```
+
+### Engineering Rationale
+
+1. **Pragmatism** — The live demo showcases the product and the videy.co flow. Full functionality is one click away in Codespaces or two commands away locally.
+2. **Zero cost guarantee** — No credit card required at any layer. No surprise monthly bills.
+3. **Always accessible** — The Vercel frontend is up 24/7. Only Playwright-dependent extraction requires the full backend.
+4. **Transparent communication** — Users know upfront which providers work on the demo and which need local setup. No bait-and-switch.
 
 ---
 
@@ -213,18 +270,9 @@ Proxy download a media stream. Used internally by the `proxyDownloadUrl` field.
 
 ```bash
 cd backend
-
-# Run all tests
-npm test
-
-# Run with coverage
-npm run test:coverage
-
-# Watch mode
-npm run test:watch
+npm test        # 99 tests
+npm run test:coverage   # 90%+ line coverage
 ```
-
-**Current coverage:**
 
 | Metric | Coverage |
 |---|---|
@@ -235,50 +283,6 @@ npm run test:watch
 
 ---
 
-## Deployment
-
-### Render (Docker)
-
-The project includes a `render.yaml` for one-click deployment on Render:
-
-```yaml
-services:
-  - type: web
-    name: link-download-backend
-    env: docker
-    dockerContext: backend
-    dockerfilePath: backend/Dockerfile
-    envVars:
-      - key: PORT
-        value: 3000
-    autoDeploy: true
-    branch: main
-```
-
-### Environment Variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `3001` | Backend server port |
-| `NODE_ENV` | `development` | `development`, `production`, or `test` |
-| `ALLOWED_ORIGINS` | `*` | Comma-separated CORS origins |
-| `LOG_LEVEL` | `info` | Pino log level: `debug`, `info`, `warn`, `error`, `fatal`, `trace`, `silent` |
-| `RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window in milliseconds |
-| `RATE_LIMIT_MAX` | `5` | Max requests per window per IP |
-| `VITE_BACKEND_URL` | `http://localhost:3001` | Frontend → backend proxy target |
-
----
-
-## Project Status
-
-- ✅ **Core extraction** — Fully functional for all 4 supported providers
-- ✅ **Security** — Helmet, CORS, rate limiting, input validation, typed errors
-- ✅ **Testing** — 99 tests, 90%+ coverage
-- ✅ **Developer experience** — TypeScript strict, Husky pre-commit hooks, Docker Compose
-- ⏳ **Frontend deployment** — Not yet configured (Vercel/Netlify ready)
-
----
-
 ## License
 
 [MIT](LICENSE.md)
@@ -286,5 +290,8 @@ services:
 ---
 
 <div align="center">
-  <sub>Built with TypeScript, React, Express, and Playwright.</sub>
+  <sub>
+    Built with TypeScript, React, Express, and Playwright.<br>
+    Designed for zero-cost, no-CC deployment.
+  </sub>
 </div>

@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Hybrid 3-layer deployment architecture:
+  - **Layer 1: Vercel** (free, no CC) — frontend + serverless API for videy.co direct resolve
+  - **Layer 2: GitHub Codespaces** (free, 60h/month) — 1-click full backend with Playwright
+  - **Layer 3: Local / Docker** (free, forever) — full functionality via clone & run
+- Serverless function at `frontend/api/v1/extract.ts` for videy.co direct URL resolution
+- Vercel configuration with SPA rewrites (`frontend/vercel.json`)
+- GitHub Codespaces dev container (`.devcontainer/devcontainer.json`)
+- Provider status indicators in frontend UI (shows which work on live demo vs need backend)
+- README section explaining architecture decision with full rationale
 - Pre-commit hooks via Husky + lint-staged (auto tsc + eslint before every commit)
 - Docker Compose for one-command local development (backend + frontend)
 - `.env.example` with all configurable environment variables
